@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -18,4 +19,26 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func (app *application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
+	js, err := json.Marshal(data) // encode data to JSON
+	if err != nil {
+		return err
+	}
+
+	js = append(js, '\n')
+
+	// Note that it's OK if the provided header map is nil. Go doesn't throw an error
+	// if you try to range over (or generally, read from) a nil map.
+	for key, value := range headers {
+		w.Header()[key] = value
+	}
+
+	// Add the "Content-Type: application/json" header, then write the status code and JSON response.
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(js)
+
+	return nil
 }
