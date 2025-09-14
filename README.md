@@ -1,6 +1,7 @@
 ## Comamands
 
 ```bash
+brew install postgresql@15 
 brew services start postgresql@15
 psql -U postgres
 \c greenlight
@@ -21,3 +22,12 @@ psql --host=localhost --dbname=greenlight --username=greenlight
 
 - Run: `source ~/.profile`
 - Check: `echo $GREENLIGHT_DB_DSN`
+
+
+## Set up SQL migration
+
+- Run
+  ```bash
+  brew install golang-migrate
+  ```
+- 

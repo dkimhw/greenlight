@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 	"time"
-
+	"greenlight.dkimhw/internal/data"
 	// Import the pq driver so that it can register itself with the database/sql
 	// package. Note that we alias this import to the blank identifier, to stop the Go
 	// compiler complaining that the package isn't being used.
@@ -23,9 +23,12 @@ const version = "1.0.0"
 type config struct {
 	port int
 	env  string
-	db   struct {
-		dsn string
-	}
+    db   struct {
+        dsn          string
+        maxOpenConns int
+        maxIdleConns int
+        maxIdleTime  time.Duration
+    }
 }
 
 // define app struct to hold dependencies for HTTP handlers, helpers, and middlewares.
@@ -38,11 +41,15 @@ func main() {
 	var cfg config
 	flag.IntVar(&cfg.port, "port", 4000, "API server port") // default val: 4000
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.Parse()
 
 	// Read the DSN value from the db-dsn command-line flag into the config struct. We
 	// default to using our development DSN if no flag is provided.
 	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
+    // Read the connection pool settings from command-line flags into the config struct.
+    // Note that the default values we're using are the ones we discussed above.
+    flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
+    flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
+    flag.DurationVar(&cfg.db.maxIdleTime, "db-max-idle-time", 15*time.Minute, "PostgreSQL max connection idle time")
 	flag.Parse()
 
 	// Writes log entries to the standard out stream
@@ -89,6 +96,10 @@ func openDB(cfg config) (*sql.DB, error) {
 		return nil, err
 	}
 
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+	db.SetConnMaxIdleTime(cfg.db.maxIdleTime)
+	
 	// Create a context with a 5-second timeout deadline.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
