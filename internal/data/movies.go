@@ -118,5 +118,30 @@ func (m MovieModel) Update(movie *Movie) error {
 }
 
 func (m MovieModel) Delete(id int64) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+
+	query := `
+			DELETE FROM movies
+			WHERE id = $1`
+
+	// Execute the SQL query using the Exec() method, passing in the id variable as
+	// the value for the placeholder parameter. The Exec() method returns a sql.Result
+	// value.
+	result, err := m.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
 	return nil
 }
