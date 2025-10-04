@@ -1,21 +1,22 @@
 package data
 
 import (
-    "database/sql"
-    "errors"
+	"database/sql"
+	"errors"
 )
 
 // custom error - returned when no movie is found in DB.
 var (
 	ErrRecordNotFound = errors.New("record not found.")
+	ErrEditConflict   = errors.New("edit conflict.")
 )
 
 type Models struct {
-    Movies MovieModel
+	Movies MovieModel
 }
 
-func NewModels (db *sql.DB) Models {
-	return Models {
+func NewModels(db *sql.DB) Models {
+	return Models{
 		Movies: MovieModel{DB: db},
 	}
 }
